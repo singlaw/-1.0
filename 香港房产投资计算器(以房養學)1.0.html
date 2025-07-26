@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>香港房产投资计算器</title>
+    <style>
+        /* 您最满意的原始样式 */
+        #loginScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #004b8d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            color: white;
+        }
+        #loginForm {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            color: #333;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        #loginForm input {
+            padding: 10px;
+            margin: 15px 0;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        /* 主计算器样式（完全保留原始样式） */
+        #calculatorContent {
+            display: none;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .calculator {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #004b8d;
+            border-bottom: 2px solid #004b8d;
+            padding-bottom: 5px;
+        }
+        .input-group {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .input-group label {
+            width: 200px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 150px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #004b8d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .result-table th, .result-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .result-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #d70000;
+        }
+
+        /* 打印优化 */
+        @media print {
+            button, .no-print, #loginScreen, .financial-plan {
+                display: none !important;
+            }
+            body {
+                padding: 10mm;
+                background: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginScreen">
+        <div id="loginForm">
+            <h2 style="color:#004b8d;">香港房产投资计算器</h2>
+            <p>请输入访问密码</p>
+            <input type="password" id="loginPassword" placeholder="输入密码">
+            <div>
+                <button onclick="checkLogin()" style="margin-top:10px;">进入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主计算器内容 -->
+    <div id="calculatorContent">
+        <div class="calculator">
+            <h2 class="financial-plan">財務計劃</h2>
+            <div class="financial-plan">
+                <div class="input-group">
+                    <label>购房价格 (港元):</label>
+                    <input type="number" id="propertyPrice" value="10000000">
+                </div>
+                <div class="input-group">
+                    <label>贷款比例 (%):</label>
+                    <input type="number" id="loanRatio" value="50">
+                </div>
+                <div class="input-group">
+                    <label>贷款年限 (年):</label>
+                    <input type="number" id="loanTerm" value="30">
+                </div>
+                <div class="input-group">
+                    <label>年利率 (%):</label>
+                    <input type="number" id="annualRate" value="3.5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>学费 (港元/年):</label>
+                    <input type="number" id="tuitionFee" value="100000">
+                </div>
+                <div class="input-group">
+                    <label>生活费 (港元/年):</label>
+                    <input type="number" id="livingCost" value="50000">
+                </div>
+                <div class="input-group">
+                    <label>年租金收入 (港元):</label>
+                    <input type="number" id="rentalIncome" value="192000">
+                </div>
+                <div class="input-group">
+                    <label>年节省房租 (港元):</label>
+                    <input type="number" id="savedRent" value="216000">
+                </div>
+                <div class="input-group">
+                    <label>预期年升值率 (%):</label>
+                    <input type="number" id="appreciationRate" value="5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>持有年限 (年):</label>
+                    <input type="number" id="holdingPeriod" value="4" min="1">
+                </div>
+            </div>
+
+            <div style="text-align:center;margin:20px 0;">
+                <button onclick="calculate()">计算</button>
+                <button onclick="window.print()">打印结果</button>
+            </div>
+
+            <div id="result">
+                <!-- 结果将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 密码设置
+        const PASSWORD = "98107610";
+        
+        // 登录功能
+        function checkLogin() {
+            const input = document.getElementById('loginPassword').value;
+            if(input === PASSWORD) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('calculatorContent').style.display = 'block';
+            } else {
+                alert("密码错误！");
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPassword').focus();
+            }
+        }
+        
+        // 货币格式化
+        function formatCurrency(amount) {
+            return 'HKD ' + Math.round(amount).toLocaleString('zh-HK');
+        }
+        
+        // 等额本息计算函数（按您的要求）
+        function calculateAnnualInterest(annualRate, loanTerm, loanAmount, startYear, endYear) {
+            const monthlyRate = annualRate / 12;
+            const totalMonths = loanTerm * 12;
+            const monthlyPayment = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, totalMonths) / 
+                                 (Math.pow(1 + monthlyRate, totalMonths) - 1);
+            
+            let balance = loanAmount;
+            const yearlyData = [];
+            
+            for(let year = startYear; year <= endYear; year++) {
+                let yearInterest = 0;
+                for(let month = 1; month <= 12; month++) {
+                    const interest = balance * monthlyRate;
+                    const principal = monthlyPayment - interest;
+                    yearInterest += interest;
+                    balance -= principal;
+                }
+                yearlyData.push({
+                    year: year,
+                    interest: yearInterest,
+                    balance: balance
+                });
+            }
+            return yearlyData;
+        }
+        
+        // 主计算函数
+        function calculate() {
+            const propertyPrice = parseFloat(document.getElementById('propertyPrice').value) || 0;
+            const loanRatio = parseFloat(document.getElementById('loanRatio').value) / 100 || 0;
+            const loanTerm = parseInt(document.getElementById('loanTerm').value) || 0;
+            const annualRate = parseFloat(document.getElementById('annualRate').value) / 100 || 0;
+            const tuitionFee = parseFloat(document.getElementById('tuitionFee').value) || 0;
+            const livingCost = parseFloat(document.getElementById('livingCost').value) || 0;
+            const rentalIncome = parseFloat(document.getElementById('rentalIncome').value) || 0;
+            const savedRent = parseFloat(document.getElementById('savedRent').value) || 0;
+            const appreciationRate = parseFloat(document.getElementById('appreciationRate').value) / 100 || 0;
+            const holdingPeriod = parseInt(document.getElementById('holdingPeriod').value) || 0;
+            
+            // 计算贷款相关值（使用您指定的方法）
+            const loanAmount = propertyPrice * loanRatio;
+            const yearlyInterests = calculateAnnualInterest(
+                annualRate,
+                loanTerm,
+                loanAmount,
+                1,
+                holdingPeriod
+            );
+            const totalInterest = yearlyInterests.reduce((sum, y) => sum + y.interest, 0);
+            
+            // 计算其他值
+            const totalTuitionFee = tuitionFee * holdingPeriod;
+            const totalLivingCost = livingCost * holdingPeriod;
+            const totalEducationLivingCost = totalTuitionFee + totalLivingCost;
+            const totalRentalIncome = rentalIncome * holdingPeriod;
+            const totalSavedRent = savedRent * holdingPeriod;
+            const futureValue = propertyPrice * Math.pow(1 + appreciationRate, holdingPeriod);
+            const netProfit = futureValue - propertyPrice - totalInterest - totalTuitionFee - totalLivingCost + totalRentalIncome + totalSavedRent;
+            
+            // 显示完整结果（只显示总利息，不显示逐年明细）
+            document.getElementById('result').innerHTML = `
+                <h2>计算结果</h2>
+                <table class="result-table">
+                    <tr>
+                        <th colspan="2">基本财务数据</th>
+                    </tr>
+                    <tr>
+                        <td>购房价格 (港元):</td>
+                        <td>${formatCurrency(propertyPrice)}</td>
+                    </tr>
+                    <tr>
+                        <td>贷款比例 (%):</td>
+                        <td>${loanRatio * 100}%</td>
+                    </tr>
+                    <tr>
+                        <td>贷款年限 (年):</td>
+                        <td>${loanTerm}</td>
+                    </tr>
+                    <tr>
+                        <td>贷款金额:</td>
+                        <td>${formatCurrency(loanAmount)}</td>
+                    </tr>
+                    <tr>
+                        <td>贷款利率:</td>
+                        <td>${annualRate * 100}%</td>
+                    </tr>
+                    <tr>
+                        <td>总利息支出:</td>
+                        <td>${formatCurrency(totalInterest)}</td>
+                    </tr>
+                </table>
+                
+                <table class="result-table">
+                    <tr>
+                        <th colspan="2">支出项目 (${holdingPeriod}年)</th>
+                    </tr>
+                    <tr>
+                        <td>学费总额</td>
+                        <td>${formatCurrency(totalTuitionFee)}</td>
+                    </tr>
+                    <tr>
+                        <td>生活费总额</td>
+                        <td>${formatCurrency(totalLivingCost)}</td>
+                    </tr>
+                    <tr>
+                        <td>学费+生活费总额</td>
+                        <td>${formatCurrency(totalEducationLivingCost)}</td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">收入项目 (${holdingPeriod}年)</th>
+                    </tr>
+                    <tr>
+                        <td>租金收入</td>
+                        <td>${formatCurrency(totalRentalIncome)}</td>
+                    </tr>
+                    <tr>
+                        <td>自住节省房租</td>
+                        <td>${formatCurrency(totalSavedRent)}</td>
+                    </tr>
+                    <tr>
+                        <td>房产升值价值</td>
+                        <td>${formatCurrency(futureValue)}</td>
+                    </tr>
+                    <tr class="highlight">
+                        <th>净利潤 (港元)</th>
+                        <th>${formatCurrency(netProfit)}</th>
+                    </tr>
+                </table>
+                
+                <div class="no-print">
+                    <p><strong>计算公式：</strong><br>
+                    净利潤 = 卖价(${formatCurrency(futureValue)}) - 购价(${formatCurrency(propertyPrice)})<br>
+                    - 总支出(${formatCurrency(totalInterest + totalTuitionFee + totalLivingCost)})<br>
+                    + 总收入(${formatCurrency(totalRentalIncome + totalSavedRent)})</p>
+                    
+                    <p><strong>利息计算方式：</strong><br>
+                    等额本息还款法（精确到月计算）</p>
+                    
+                    <p>以上资料只作参考</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
